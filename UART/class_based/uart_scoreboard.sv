@@ -1,16 +1,10 @@
 class uart_scoreboard;
     
-    // Mailboxes from Monitors
+    mailbox #(uart_packet) tx_mon_mbx;  
+    mailbox #(uart_packet) rx_mon_mbx; 
     
-    mailbox #(uart_packet) tx_mon_mbx;  // From TX Monitor
-    mailbox #(uart_packet) rx_mon_mbx;  // From RX Monitor
-    
-    // Events
-    
-    event comparison_done;  // Triggered after each comparison
-    
-    // Statistics
-    
+    event comparison_done;     
+
     int packets_compared;
     int packets_matched;
     int packets_mismatched;
@@ -19,16 +13,10 @@ class uart_scoreboard;
     
     bit active;
     
-    // Configuration
-    
-    bit stop_on_mismatch;  // If 1, stop simulation on first mismatch
-    
-    // Storage Queues (for out-of-order handling)
+    bit stop_on_mismatch;      
     
     uart_packet tx_queue[$];
     uart_packet rx_queue[$];
-    
-    // Constructor
     
     function new(mailbox #(uart_packet) tx_mbx, mailbox #(uart_packet) rx_mbx);
         this.tx_mon_mbx = tx_mbx;
@@ -44,32 +32,21 @@ class uart_scoreboard;
         this.stop_on_mismatch = 0;
     endfunction
     
-    // Configuration Methods
-    
     function void set_stop_on_mismatch(bit value);
         this.stop_on_mismatch = value;
         $display("[SCOREBOARD] Stop on mismatch: %s", value ? "ENABLED" : "DISABLED");
     endfunction
-    
-    // Main Scoreboard Task
     
     task run();
         active = 1;
         $display("[SCOREBOARD] Started...");
         
         fork
-            // Thread 1: Collect from TX Monitor
             collect_tx_packets();
-            
-            // Thread 2: Collect from RX Monitor
             collect_rx_packets();
-            
-            // Thread 3: Compare packets
             compare_packets();
         join
     endtask
-    
-    // Collect TX Monitor Packets
     
     task collect_tx_packets();
         uart_packet pkt;
@@ -79,13 +56,9 @@ class uart_scoreboard;
             tx_packets_received++;
             
             $display("[SCOREBOARD] TX packet received: Data=0x%02h @ %0t", pkt.data, $time);
-            
-            // Add to queue
             tx_queue.push_back(pkt);
         end
     endtask
-    
-    // Collect RX Monitor Packets
     
     task collect_rx_packets();
         uart_packet pkt;
@@ -95,34 +68,26 @@ class uart_scoreboard;
             rx_packets_received++;
             
             $display("[SCOREBOARD] RX packet received: Data=0x%02h @ %0t", pkt.data, $time);
-            
-            // Add to queue
             rx_queue.push_back(pkt);
         end
     endtask
-    
-    // Compare Packets
     
     task compare_packets();
         uart_packet tx_pkt, rx_pkt;
         string mismatch_msg;
         
         forever begin
-            // Wait until we have packets in both queues
             wait(tx_queue.size() > 0 && rx_queue.size() > 0);
             
-            // Get packets from queues (FIFO order)
             tx_pkt = tx_queue.pop_front();
             rx_pkt = rx_queue.pop_front();
             
-            // Compare
             if (tx_pkt.compare(rx_pkt, mismatch_msg)) begin
                 // Match!
                 packets_matched++;
                 $display("[SCOREBOARD] ✓ MATCH: TX=0x%02h, RX=0x%02h @ %0t", tx_pkt.data, rx_pkt.data, $time);
             end 
 			else begin
-                // Mismatch!
                 packets_mismatched++;
                 $error("[SCOREBOARD] ✗ MISMATCH: %s @ %0t", mismatch_msg, $time);
                 $display("[SCOREBOARD]   TX Packet:");
@@ -130,7 +95,6 @@ class uart_scoreboard;
                 $display("[SCOREBOARD]   RX Packet:");
                 rx_pkt.print("      ");
                 
-                // Stop simulation if configured
                 if (stop_on_mismatch) begin
                     $display("[SCOREBOARD] Stopping simulation due to mismatch!");
                     display_final_report();
@@ -140,19 +104,13 @@ class uart_scoreboard;
             
             packets_compared++;
             -> comparison_done;
-            
-            // Small delay to allow other threads to run
             #1;
         end
     endtask
     
-    // Check if Queues are Empty (for end-of-test check)
-    
     function bit queues_empty();
         return (tx_queue.size() == 0 && rx_queue.size() == 0);
     endfunction
-     
-    // Wait for All Comparisons to Complete
     
     task wait_for_completion(int expected_packets, int timeout_cycles = 10000);
         int start_time = $time;
@@ -180,8 +138,6 @@ class uart_scoreboard;
         $display("[SCOREBOARD] Comparison complete.");
     endtask
     
-    // Display Statistics
-    
     function void display_stats();
         real pass_rate;
         
@@ -204,8 +160,6 @@ class uart_scoreboard;
         $display("Status                : %s", active ? "ACTIVE" : "IDLE");
         $display("========================================");
     endfunction
-    
-    // Display Final Report
     
     function void display_final_report();
         real pass_rate;
@@ -241,36 +195,3 @@ class uart_scoreboard;
     
 endclass
 
-// ============================================================================
-// Example Usage
-// ============================================================================
-/*
-    // In testbench:
-    
-    // Create mailboxes
-    mailbox #(uart_packet) tx_mon2scb_mb = new();
-    mailbox #(uart_packet) rx_mon2scb_mb = new();
-    
-    // Create scoreboard
-    uart_scoreboard scb = new(tx_mon2scb_mb, rx_mon2scb_mb);
-    
-    // Configure
-    scb.set_stop_on_mismatch(0);  // Continue on mismatch
-    
-    // Run scoreboard in a fork
-    fork
-        scb.run();
-    join_none
-    
-    // Monitor comparison events
-    fork
-        forever begin
-            @(scb.comparison_done);
-            $display("[TB] Comparison done at %0t", $time);
-        end
-    join_none
-    
-    // At end of test
-    scb.wait_for_completion(expected_packet_count);
-    scb.display_final_report();
-*/

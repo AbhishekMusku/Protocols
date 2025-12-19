@@ -131,34 +131,3 @@ class uart_generator;
     endfunction
     
 endclass
-
-// ============================================================================
-// Example Usage
-// ============================================================================
-/*
-    mailbox #(uart_packet) gen2drv_mb = new();
-    uart_generator gen = new(gen2drv_mb);
-    
-    // Example 1: Random generation
-    gen.set_mode(GEN_RANDOM);
-    gen.set_num_packets(50);
-    gen.run();
-    
-    // Example 2: Corner cases
-    gen.set_mode(GEN_CORNER_CASES);
-    gen.set_num_packets(20);
-    gen.run();
-    
-    // Example 3: Burst mode (stress test)
-    gen.set_mode(GEN_BURST);
-    gen.set_num_packets(100);
-    gen.run();
-    
-    // Example 4: Exhaustive test (all values)
-    gen.set_mode(GEN_ALL_VALUES);
-    gen.set_num_packets(256);
-    gen.run();
-    
-    // Display statistics
-    gen.display_stats();
-*/

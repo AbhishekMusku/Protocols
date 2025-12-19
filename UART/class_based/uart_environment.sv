@@ -1,29 +1,23 @@
 class uart_environment;
 
-    // Virtual Interface
     virtual uart_if vif;
 
-    // Verification Components
     uart_generator    gen;
     uart_driver       drv;
     uart_tx_monitor   tx_mon;
     uart_rx_monitor   rx_mon;
     uart_scoreboard   scb;
 
-    // Mailboxes
     mailbox #(uart_packet) gen2drv_mbx;
     mailbox #(uart_packet) txmon2scb_mbx;
     mailbox #(uart_packet) rxmon2scb_mbx;
 
-    // Events
     event drv_done;
 
-    // Configuration
     int num_packets;
     uart_generator::gen_mode_e test_mode;
     bit stop_on_mismatch;
 
-    // Constructor
     function new(virtual uart_if vif);
         this.vif = vif;
         this.num_packets = 10;
@@ -31,7 +25,6 @@ class uart_environment;
         this.stop_on_mismatch = 0;
     endfunction
 
-    // Build Phase
     function void build();
         $display("[ENV] Building environment...");
 
@@ -52,7 +45,6 @@ class uart_environment;
         $display("[ENV] Build complete");
     endfunction
 
-    // Configure Test
     function void configure_test(int num_pkts,
                                  uart_generator::gen_mode_e mode);
         this.num_packets = num_pkts;
@@ -73,17 +65,6 @@ class uart_environment;
         tx_mon.set_baud_ticks(ticks);
     endfunction
 
-    // Reset
-/*    task //reset_dut();
-        $display("[ENV] Resetting DUT...");
-        vif.reset = 1;
-        drv.reset_signals();
-        repeat (10) @(posedge vif.clk);
-        vif.reset = 0;
-        repeat (5) @(posedge vif.clk);
-        $display("[ENV] Reset complete");
-    endtask
-*/
     // Run Phase
     task run();
         $display("[ENV] Starting test...");
@@ -96,7 +77,6 @@ class uart_environment;
             gen.run();
         join_none
 
-        // Wait for scoreboard to finish comparisons
         scb.wait_for_completion(num_packets, 50000);
 
         $display("[ENV] Test complete");
@@ -169,9 +149,7 @@ class uart_environment;
 endclass
 
 
-// ============================================================================
-// Example Usage (in testbench top)
-// ============================================================================
+
 /*
 module tb_top;
     logic clk, reset;

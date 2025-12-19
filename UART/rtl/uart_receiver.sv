@@ -24,42 +24,38 @@ module uart_receiver (
             state <= next_state;
     end
 
-    // --- NEXT STATE LOGIC ---
+
     always_comb begin
         next_state = state; // Default: Stay in current state
         
         case (state)
             IDLE: begin
-                // Start detected (Falling Edge of raw rx)
                 if (rx == 1'b0) 
                     next_state = START;
             end
 
             START: begin
                 if (rx_tick) begin
-                    // Check middle of start bit (Tick 7)
                     if (sample_cnt == 7) begin
                         if (rx == 1'b0) 
-                            next_state = DATA; // Valid Start
+                            next_state = DATA; 
                         else                  
-                            next_state = IDLE; // False Start (Glitch)
+                            next_state = IDLE; 
                     end
                 end
             end
 
             DATA: begin
                 if (rx_tick) begin
-                    // Check middle of data bit (Tick 15)
                     if (sample_cnt == 15) begin
                         if (bit_cnt == 7)
-                            next_state = STOP; // All 8 bits done
+                            next_state = STOP; 
                     end
                 end
             end
 
             STOP: begin
                 if (rx_tick) begin
-                    // Check middle of stop bit (Tick 15)
                     if (sample_cnt == 15) 
                         next_state = IDLE;
                 end
@@ -79,7 +75,7 @@ module uart_receiver (
             rx_ready   <= 1'b0;
         end 
         else begin
-            rx_ready <= 1'b0; // Default: Pulse low
+            rx_ready <= 1'b0; 
 
             case (state)
                 IDLE: begin
@@ -89,9 +85,8 @@ module uart_receiver (
 
                 START: begin
                     if (rx_tick) begin
-                        // Count up to 7 (middle of start bit)
                         if (sample_cnt == 7) 
-                            sample_cnt <= 4'd0; // Reset for first data bit
+                            sample_cnt <= 4'd0; 
                         else 
                             sample_cnt <= sample_cnt + 1;
                     end
@@ -100,7 +95,7 @@ module uart_receiver (
                 DATA: begin
                     if (rx_tick) begin
                         if (sample_cnt == 15) begin
-                            sample_cnt <= 4'd0; // Reset for next bit
+                            sample_cnt <= 4'd0; 
                             shift_reg <= {rx, shift_reg[7:1]}; 
                             bit_cnt   <= bit_cnt + 1;
                         end 
@@ -115,8 +110,8 @@ module uart_receiver (
                         if (sample_cnt == 15) begin
                             sample_cnt <= 4'd0;
                             if (rx == 1'b1) begin
-                                rx_data  <= shift_reg; // Push to output
-                                rx_ready <= 1'b1;      // Pulse Valid
+                                rx_data  <= shift_reg; 
+                                rx_ready <= 1'b1;
                             end
                         end 
                         else begin

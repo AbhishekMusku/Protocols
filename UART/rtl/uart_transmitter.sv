@@ -17,7 +17,6 @@ module uart_transmitter (
     reg [2:0] cnt;       // Bit counter (0-7)
     reg [7:0] shift_reg; // Shift register
 
-    // --- STATE REGISTER ---
     always @(posedge clk) begin
         if (reset) 
             state <= IDLE;
@@ -25,7 +24,6 @@ module uart_transmitter (
             state <= next_state;
     end
 
-    // --- NEXT STATE LOGIC ---
     always_comb begin
         next_state = state; 
         case (state)
@@ -48,7 +46,7 @@ module uart_transmitter (
     // --- DATAPATH & OUTPUT LOGIC ---
     always @(posedge clk) begin
         if (reset) begin
-            tx <= 1'b1;          // Idle High
+            tx <= 1'b1;          
             shift_reg <= 8'd0;
             cnt <= 3'd0;
             tx_busy <= 1'b0;
@@ -59,9 +57,8 @@ module uart_transmitter (
 
             case (state)
                 IDLE: begin
-                    tx <= 1'b1;         // Drive High
-                    tx_busy <= 1'b0;    // Not busy
-                    // Load data immediately when start requested
+                    tx <= 1'b1;         
+                    tx_busy <= 1'b0;
                     if (tx_start) begin
                         shift_reg <= tx_data;
                         tx_busy <= 1'b1;
@@ -70,26 +67,26 @@ module uart_transmitter (
 
                 START: begin
                     tx_busy <= 1'b1;
-                    tx <= 1'b0;         // *** CRITICAL FIX: Drive Start Bit (Low) ***
-                    cnt <= 3'd0;        // Reset bit counter
+                    tx <= 1'b0;         
+                    cnt <= 3'd0;        
                 end
 
                 DATA: begin
                     tx_busy <= 1'b1;
-                    tx <= shift_reg[0]; // Drive LSB
+                    tx <= shift_reg[0]; 
 
                     if (tx_tick) begin
-                        shift_reg <= {1'b0, shift_reg[7:1]}; // Shift Right
+                        shift_reg <= {1'b0, shift_reg[7:1]}; 
                         cnt <= cnt + 1;
                     end
                 end
 
                 STOP: begin
                     tx_busy <= 1'b1;
-                    tx <= 1'b1;         // Drive Stop Bit (High)
+                    tx <= 1'b1;         
                     
                     if (tx_tick) begin
-                        tx_done <= 1'b1; // Pulse Done signal
+                        tx_done <= 1'b1; 
                     end
                 end
             endcase

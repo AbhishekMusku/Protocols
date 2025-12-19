@@ -2,9 +2,6 @@
 
 module uart_tb_1;
 
-    // -------------------------------------------------------------------------
-    // 1. Signals & Configuration
-    // -------------------------------------------------------------------------
     reg  clk, reset;
     reg  [15:0] baud_divisor;
     reg  [7:0]  tx_data;
@@ -16,9 +13,6 @@ module uart_tb_1;
     int pass_count = 0;
     int fail_count = 0;
 
-    // -------------------------------------------------------------------------
-    // 2. DUT Instantiation
-    // -------------------------------------------------------------------------
     uart_top dut (
         .clk(clk),
         .reset(reset),
@@ -103,7 +97,7 @@ module uart_tb_1;
 	end
 	
 	initial begin
-		#2_500_000;  // 2.5 ms safety timeout
+		#2_500_000;  
 		$display("SAFETY TIMEOUT: Simulation stopped.");
 		$finish;
 	end

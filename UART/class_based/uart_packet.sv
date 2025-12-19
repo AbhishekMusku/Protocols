@@ -54,7 +54,6 @@ class uart_packet;
     
     function bit [10:0] pack_to_bits();
         bit [10:0] packedd;
-        // Standard UART frame: START(0) + DATA[7:0] + STOP(1)
         packedd[0] = 0;              // Start bit
         packedd[8:1] = data;         // Data bits (LSB first in transmission)
         packedd[9] = 1;              // Stop bit
