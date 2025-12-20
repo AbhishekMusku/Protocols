@@ -12,7 +12,7 @@ vlog -sv \
     uart_tb_top.sv
 
 # Load simulation
-vsim -voptargs=+acc work.uart_tb_top
+vsim -voptargs=+acc work.uart_tb_top +TESTNAME=$test_name
 
 # Basic waves (optional)
 add wave -r sim:/uart_tb_top/uart_vif/*

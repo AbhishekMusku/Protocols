@@ -50,7 +50,7 @@ module uart_tb_top;
     
     initial begin
         uart_environment env;
-        
+        string test_name;
         $display("========================================================================");
         $display("                    UART VERIFICATION TESTBENCH");
         $display("========================================================================");
@@ -66,9 +66,25 @@ module uart_tb_top;
         env.set_stop_on_mismatch(0);
         
         uart_vif.baud_divisor = 16'd32;
-        
+		
+        if ($value$plusargs("TESTNAME=%s", test_name)) begin
+            $display("[TB_TOP] +TESTNAME argument found: %s", test_name);
+        end else begin
+            $display("[TB_TOP] No +TESTNAME argument found. Defaulting to comprehensive_test.");
+            test_name = "comprehensive_test";
+        end
 
-		env.run_comprehensive_test();
+        // SELECT TEST BASED ON ARGUMENT
+        case (test_name)
+            "smoke_test":        env.run_smoke_test();
+            "corner_test":       env.run_corner_test();
+            "stress_test":       env.run_stress_test();
+            "comprehensive_test": env.run_comprehensive_test();
+            default: begin
+                $display("[TB_TOP] Error: Unknown test name '%s'. Running comprehensive_test instead.", test_name);
+                env.run_comprehensive_test();
+            end
+        endcase
 
         $display("\n[TB_TOP] Simulation complete @ %0t", $time);
         $finish;
