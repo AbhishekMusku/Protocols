@@ -15,8 +15,7 @@ class spi_slave_driver extends uvm_driver #(spi_seq_item);
 
   function void build_phase(uvm_phase phase);
     super.build_phase(phase);
-    if (!uvm_config_db#(spi_config)::get(this, "", "spi_cfg", m_cfg))
-      `uvm_fatal("SLV_DRV", "No spi_cfg found")
+    if (!uvm_config_db#(spi_config)::get(this, "", "spi_cfg", m_cfg)) `uvm_fatal("SLV_DRV", "No spi_cfg found")
     vif = m_cfg.vif;
   endfunction
 
@@ -41,9 +40,7 @@ class spi_slave_driver extends uvm_driver #(spi_seq_item);
       wait (vif.res_cb.o_TX_Ready === 1'b1);
       vif.res_cb.i_SPI_MISO <= 1'b0;
 
-      `uvm_info("SLV_RSP",
-                "Completed slave response transaction",
-                UVM_LOW)
+      `uvm_info("SLV_RSP", "Completed slave response transaction", UVM_LOW)
     end
   endtask
 
@@ -54,7 +51,7 @@ class spi_slave_driver extends uvm_driver #(spi_seq_item);
     cpha_zero_mode = (m_cfg.spi_mode == 0 || m_cfg.spi_mode == 2);
 
     if (cpha_zero_mode) begin
-      // CPHA=0: Drive MSB immediately when Ready goes Low
+      // CPHA=0
       vif.res_cb.i_SPI_MISO <= data_to_send[7];
 
       for (bit_idx = 6; bit_idx >= 0; bit_idx--) begin
@@ -63,7 +60,7 @@ class spi_slave_driver extends uvm_driver #(spi_seq_item);
       end
     end
     else begin
-      // CPHA=1: Wait for first edge before driving MSB
+      // CPHA=1
       for (bit_idx = 7; bit_idx >= 0; bit_idx--) begin
         wait_for_shift_edge();
         vif.res_cb.i_SPI_MISO <= data_to_send[bit_idx];

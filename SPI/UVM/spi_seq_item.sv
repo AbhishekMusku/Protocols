@@ -36,7 +36,6 @@ class spi_seq_item extends uvm_sequence_item;
             this.data_s == to_compare.data_s);
   endfunction : do_compare
 
-  // convert2string: For clean log files and `uvm_info displays
   virtual function string convert2string();
     return $sformatf("MOSI: 0x%h", data_m);
   endfunction : convert2string

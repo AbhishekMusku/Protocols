@@ -15,26 +15,21 @@ class spi_driver extends uvm_driver #(spi_seq_item);
   function void build_phase(uvm_phase phase);
     super.build_phase(phase);
     
-    // Get the config object (Make sure your Test creates 'spi_cfg'!)
     if (!uvm_config_db#(spi_config)::get(this, "", "spi_cfg", m_cfg)) begin
       `uvm_fatal("DRV", "Could not get spi_cfg from config_db")
     end
     
-    // Assign local vif handle from the config
     vif = m_cfg.vif;
   endfunction
 
 
   virtual task run_phase(uvm_phase phase);
-    // 1. Initialize Signals to Idle
     vif.drv_cb.i_TX_DV   <= 1'b0;
     vif.drv_cb.i_TX_Byte <= 8'h00;
 
-    // 2. Wait for Reset to lift (Passive wait)
     wait(vif.i_Rst_L === 1'b1);
     `uvm_info("DRV", "Reset lifted. Starting driver loop...", UVM_MEDIUM)
     
-    // 3. Process Transactions
     forever begin
       seq_item_port.get_next_item(req); 
 	  `uvm_info("DRV", "Driving transaction ...", UVM_MEDIUM)
@@ -57,9 +52,8 @@ class spi_driver extends uvm_driver #(spi_seq_item);
 
 
     @(vif.drv_cb);
-    vif.drv_cb.i_TX_DV   <= 1'b0; // Release Valid
-
-
+    vif.drv_cb.i_TX_DV   <= 1'b0;
+	
     @(vif.drv_cb); 
     
   endtask

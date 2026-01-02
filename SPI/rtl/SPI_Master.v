@@ -202,7 +202,6 @@ module SPI_Master
     else
     begin
 
-      // Default Assignments
       o_RX_DV   <= 1'b0;
 
       if (o_TX_Ready) // Check if ready is high, if so reset bit count to default
@@ -232,8 +231,8 @@ module SPI_Master
     else
       begin
         o_SPI_Clk <= r_SPI_Clk;
-      end // else: !if(~i_Rst_L)
-  end // always @ (posedge i_Clk or negedge i_Rst_L)
+      end 
+  end
   
 
 endmodule // SPI_Master

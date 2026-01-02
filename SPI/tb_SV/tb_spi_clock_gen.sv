@@ -144,8 +144,7 @@ module tb_spi_clock_gen;
         wait(tx_ready);
         $display("Time %0t: Transaction 2 complete", $time);
         
-        $display("  Total edges: Leading=%0d, Trailing=%0d (expected 16 each)", 
-                 leading_count, trailing_count);
+        $display("  Total edges: Leading=%0d, Trailing=%0d (expected 16 each)", leading_count, trailing_count);
         
         repeat(10) @(posedge clk);
         

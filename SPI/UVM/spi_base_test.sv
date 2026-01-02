@@ -11,29 +11,22 @@ class spi_base_test extends uvm_test;
     super.new(name, parent);
   endfunction
 
-  // 1. Build Phase: Configure the "Machine"
   function void build_phase(uvm_phase phase);
     super.build_phase(phase);
 
-    // A. Create the Config Object
     m_cfg = spi_config::type_id::create("m_cfg");
 
-    // B. Get the Virtual Interface (passed from tb_top)
     if (!uvm_config_db#(virtual spi_if)::get(this, "", "vif", m_cfg.vif)) begin
       `uvm_fatal("TEST", "Could not get vif from top module! check tb_top.sv")
     end
 
-    // C. Configure SPI Parameters (Must match RTL!)
     m_cfg.spi_mode = 3; // CPOL=0, CPHA=0
     m_cfg.clks_per_half_bit = 4;
-    // D. Publish Config to the whole hierarchy (Driver, Monitor, Agent)
     uvm_config_db#(spi_config)::set(this, "*", "spi_cfg", m_cfg);
 
-    // E. Create the Environment
     m_env = spi_env::type_id::create("m_env", this);
   endfunction
 
-  // 2. End of Elaboration: Print the structure (Optional but helpful)
   function void end_of_elaboration_phase(uvm_phase phase);
     uvm_top.print_topology();
   endfunction

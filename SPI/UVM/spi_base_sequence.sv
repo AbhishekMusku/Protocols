@@ -14,7 +14,7 @@ class spi_base_sequence extends uvm_sequence#(spi_seq_item);
     super.new(name);
   endfunction
 
-  // Objection handling in pre/post body is standard for "simple" testbenches
+ 
 /*  virtual task pre_body();
     if (starting_phase != null) begin
       starting_phase.raise_objection(this, get_type_name());
@@ -36,7 +36,6 @@ endclass
 class spi_single_txn_seq extends spi_base_sequence;
   `uvm_object_utils(spi_single_txn_seq)
 
-  // Data to be sent from Master to Slave
   rand bit [7:0] tx_data_val;
 
   function new(string name = "spi_single_txn_seq");
@@ -45,10 +44,8 @@ class spi_single_txn_seq extends spi_base_sequence;
 
   virtual task body();
     `uvm_info(get_type_name(),
-              $sformatf("Sequence started. tx_data_val=0x%02h", tx_data_val),
-              UVM_LOW)
+              $sformatf("Sequence started. tx_data_val=0x%02h", tx_data_val), UVM_LOW)
 
-    // Create request
     req = spi_seq_item::type_id::create("req");
 
     `uvm_info(get_type_name(),
@@ -57,7 +54,7 @@ class spi_single_txn_seq extends spi_base_sequence;
 
     start_item(req);
 
-    // Constrain item to sequence data
+
     if (!req.randomize() with { data_m == local::tx_data_val; }) begin
       `uvm_error(get_type_name(), "Randomization failed")
     end
@@ -68,18 +65,15 @@ class spi_single_txn_seq extends spi_base_sequence;
     end
 
     `uvm_info(get_type_name(),
-              "Calling finish_item(req)",
-              UVM_HIGH)
+              "Calling finish_item(req)",  UVM_HIGH)
 
     finish_item(req);
 
     `uvm_info(get_type_name(),
-              $sformatf("Transaction sent. %s", req.convert2string()),
-              UVM_MEDIUM)
+              $sformatf("Transaction sent. %s", req.convert2string()), UVM_MEDIUM)
 
     `uvm_info(get_type_name(),
-              "Sequence completed",
-              UVM_LOW)
+              "Sequence completed",  UVM_LOW)
   endtask
 endclass
 

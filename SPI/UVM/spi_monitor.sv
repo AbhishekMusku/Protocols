@@ -10,9 +10,8 @@ class spi_monitor extends uvm_monitor;
   virtual spi_if.MON vif;
   spi_config     m_cfg;
 
-  // Internal Variables
-  bit [7:0] m_mosi_byte; // Reconstructed byte from MOSI
-  bit [7:0] m_miso_byte; // Reconstructed byte from MISO
+  bit [7:0] m_mosi_byte; 
+  bit [7:0] m_miso_byte;
 
   function new(string name, uvm_component parent);
     super.new(name, parent);
@@ -27,51 +26,40 @@ class spi_monitor extends uvm_monitor;
     vif = m_cfg.vif;
   endfunction
 
-  // ---------------------------------------------------------------------------
-  // Run Phase: The "Smart" Decoder
-  // ---------------------------------------------------------------------------
+
   virtual task run_phase(uvm_phase phase);
     spi_seq_item item;
 
     forever begin
-      // A. Wait for Transaction Start
       wait(vif.mon_cb.o_TX_Ready === 1'b0);
       `uvm_info("MON_MOSI", $sformatf("TX READY SET TO %d", vif.mon_cb.o_TX_Ready), UVM_MEDIUM)
-      // Create new item to store results
+
       item = spi_seq_item::type_id::create("item");
 	  
-      // B. Decode the 8 Bits (Serial to Parallel)
-      // We fork this to capture both MOSI (TX) and MISO (RX) simultaneously
       fork
         collect_mosi(item);
         collect_miso(item);
 		collect_parallel_rx(item);
 		collect_parallel_tx(item);
-		//mochi(item);
       join
 
-      // D. Broadcast to Scoreboard
       `uvm_info("MON", $sformatf("Observed: %s", item.convert2string()), UVM_HIGH)
       mon_analysis_port.write(item);
 
-      // E. Wait for Transaction End (Ready goes High)
       wait(vif.mon_cb.o_TX_Ready === 1'b1);
     end
   endtask
 
   task collect_mosi(spi_seq_item item);
     int bit_idx;
-    // According to RTL [Source: 47], MSB (Bit 7) is sent first.
     for (bit_idx = 7; bit_idx >= 0; bit_idx--) begin
-      // 1. Wait for the correct Sampling Edge
       wait_for_sample_edge();
-      
-      // 2. Sample the bit
+
       m_mosi_byte[bit_idx] = vif.mon_cb.o_SPI_MOSI;
 	 `uvm_info("MON_MOSI", $sformatf("Completed bit_idx = %d	MOSI byte = 0x%02h (%08b)", bit_idx, m_mosi_byte, m_mosi_byte), UVM_MEDIUM)
 	  
     end
-    item.data_m = m_mosi_byte; // Store result in item
+    item.data_m = m_mosi_byte; 
   endtask
 
   task collect_miso(spi_seq_item item);
@@ -104,13 +92,10 @@ class spi_monitor extends uvm_monitor;
 
     endtask
 
-  // ---------------------------------------------------------------------------
-  // Key Logic: Determine Sampling Edge based on CPOL/CPHA
-  // ---------------------------------------------------------------------------
   // Logic derived from standard SPI Protocol:
   // Mode 0 (0,0) & Mode 3 (1,1) -> Sample on Rising Edge
   // Mode 1 (0,1) & Mode 2 (1,0) -> Sample on Falling Edge
-  // ---------------------------------------------------------------------------
+
   task wait_for_sample_edge();
     if (m_cfg.spi_mode == 0 || m_cfg.spi_mode == 3) begin
       @(posedge vif.mon_cb.o_SPI_Clk);

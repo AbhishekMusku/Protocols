@@ -97,14 +97,13 @@ module SPI_Master
     else
     begin
 
-      // Default assignments
       r_Leading_Edge  <= 1'b0;
       r_Trailing_Edge <= 1'b0;
       
       if (i_TX_DV)
       begin
         o_TX_Ready      <= 1'b0;
-        r_SPI_Clk_Edges <= 16;  // Total # edges in one byte ALWAYS 16
+        r_SPI_Clk_Edges <= 16;  
       end
       else if (r_SPI_Clk_Edges > 0)
       begin
@@ -135,12 +134,10 @@ module SPI_Master
       end
       
       
-    end // else: !if(~i_Rst_L)
-  end // always @ (posedge i_Clk or negedge i_Rst_L)
+    end 
+  end 
 
 
-  // Purpose: Register i_TX_Byte when Data Valid is pulsed.
-  // Keeps local storage of byte in case higher level module changes the data
   always @(posedge i_Clk or negedge i_Rst_L)
   begin
     if (~i_Rst_L)
@@ -155,27 +152,23 @@ module SPI_Master
         begin
           r_TX_Byte <= i_TX_Byte;
         end
-      end // else: !if(~i_Rst_L)
-  end // always @ (posedge i_Clk or negedge i_Rst_L)
+      end
+  end
 
 
-  // Purpose: Generate MOSI data
-  // Works with both CPHA=0 and CPHA=1
   always @(posedge i_Clk or negedge i_Rst_L)
   begin
     if (~i_Rst_L)
     begin
       o_SPI_MOSI     <= 1'b0;
-      r_TX_Bit_Count <= 3'b111; // send MSb first
+      r_TX_Bit_Count <= 3'b111; 
     end
     else
     begin
-      // If ready is high, reset bit counts to default
       if (o_TX_Ready)
       begin
         r_TX_Bit_Count <= 3'b111;
       end
-      // Catch the case where we start transaction and CPHA = 0
       else if (r_TX_DV & ~w_CPHA)
       begin
         o_SPI_MOSI     <= r_TX_Byte[3'b111];
@@ -190,7 +183,6 @@ module SPI_Master
   end
 
 
-  // Purpose: Read in MISO data.
   always @(posedge i_Clk or negedge i_Rst_L)
   begin
     if (~i_Rst_L)
@@ -202,27 +194,25 @@ module SPI_Master
     else
     begin
 
-      // Default Assignments
       o_RX_DV   <= 1'b0;
 
-      if (o_TX_Ready) // Check if ready is high, if so reset bit count to default
+      if (o_TX_Ready) 
       begin
         r_RX_Bit_Count <= 3'b111;
       end
       else if ((r_Leading_Edge & ~w_CPHA) | (r_Trailing_Edge & w_CPHA))
       begin
-        o_RX_Byte[r_RX_Bit_Count] <= i_SPI_MISO;  // Sample data
+        o_RX_Byte[r_RX_Bit_Count] <= i_SPI_MISO;  
         r_RX_Bit_Count            <= r_RX_Bit_Count - 1'b1;
         if (r_RX_Bit_Count == 3'b000)
         begin
-          o_RX_DV   <= 1'b1;   // Byte done, pulse Data Valid
+          o_RX_DV   <= 1'b1;  
         end
       end
     end
   end
   
-  
-  // Purpose: Add clock delay to signals for alignment.
+ 
   always @(posedge i_Clk or negedge i_Rst_L)
   begin
     if (~i_Rst_L)
@@ -232,8 +222,8 @@ module SPI_Master
     else
       begin
         o_SPI_Clk <= r_SPI_Clk;
-      end // else: !if(~i_Rst_L)
-  end // always @ (posedge i_Clk or negedge i_Rst_L)
+      end 
+  end 
   
 
-endmodule // SPI_Master
+endmodule 
